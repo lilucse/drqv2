@@ -15,6 +15,7 @@ import hydra
 import numpy as np
 import torch
 from dm_env import specs
+from omegaconf import OmegaConf
 
 import dmc
 import utils
@@ -49,8 +50,21 @@ class Workspace:
         self._global_episode = 0
 
     def setup(self):
+        # init wandb
+        if self.cfg.use_wandb:
+            import wandb
+            wandb.init(
+                project=self.cfg.wandb_project,
+                entity=self.cfg.wandb_entity,
+                group=self.cfg.wandb_group,
+                name=f'{self.cfg.task_name}_h{self.cfg.agent.hidden_dim}_seed{self.cfg.seed}',
+                config=OmegaConf.to_container(self.cfg, resolve=True),
+                dir=str(self.work_dir),
+            )
         # create logger
-        self.logger = Logger(self.work_dir, use_tb=self.cfg.use_tb)
+        self.logger = Logger(self.work_dir,
+                             use_tb=self.cfg.use_tb,
+                             use_wandb=self.cfg.use_wandb)
         # create envs
         self.train_env = dmc.make(self.cfg.task_name, self.cfg.frame_stack,
                                   self.cfg.action_repeat, self.cfg.seed)
@@ -96,12 +110,14 @@ class Workspace:
         return self._replay_iter
 
     def eval(self):
-        step, episode, total_reward = 0, 0, 0
+        step, episode = 0, 0
+        episode_rewards = []
         eval_until_episode = utils.Until(self.cfg.num_eval_episodes)
 
         while eval_until_episode(episode):
             time_step = self.eval_env.reset()
             self.video_recorder.init(self.eval_env, enabled=(episode == 0))
+            ep_reward = 0.0
             while not time_step.last():
                 with torch.no_grad(), utils.eval_mode(self.agent):
                     action = self.agent.act(time_step.observation,
@@ -109,14 +125,17 @@ class Workspace:
                                             eval_mode=True)
                 time_step = self.eval_env.step(action)
                 self.video_recorder.record(self.eval_env)
-                total_reward += time_step.reward
+                ep_reward += time_step.reward
                 step += 1
 
+            episode_rewards.append(ep_reward)
             episode += 1
             self.video_recorder.save(f'{self.global_frame}.mp4')
 
+        rewards = np.asarray(episode_rewards, dtype=np.float64)
         with self.logger.log_and_dump_ctx(self.global_frame, ty='eval') as log:
-            log('episode_reward', total_reward / episode)
+            log('episode_reward', rewards.mean())
+            log('episode_reward_std', rewards.std())
             log('episode_length', step * self.cfg.action_repeat / episode)
             log('episode', self.global_episode)
             log('step', self.global_step)

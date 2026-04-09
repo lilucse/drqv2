@@ -1,0 +1,14 @@
+numpy<2
+torch
+torchvision
+dm_control
+dm_env
+hydra-core>=1.2
+hydra-submitit-launcher
+omegaconf
+termcolor
+imageio
+imageio-ffmpeg
+opencv-python
+tensorboard
+wandb

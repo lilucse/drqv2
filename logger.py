@@ -123,7 +123,7 @@ class MetersGroup(object):
 
 
 class Logger(object):
-    def __init__(self, log_dir, use_tb):
+    def __init__(self, log_dir, use_tb, use_wandb=False):
         self._log_dir = log_dir
         self._train_mg = MetersGroup(log_dir / 'train.csv',
                                      formating=COMMON_TRAIN_FORMAT)
@@ -133,16 +133,26 @@ class Logger(object):
             self._sw = SummaryWriter(str(log_dir / 'tb'))
         else:
             self._sw = None
+        if use_wandb:
+            import wandb
+            self._wandb = wandb
+        else:
+            self._wandb = None
 
     def _try_sw_log(self, key, value, step):
         if self._sw is not None:
             self._sw.add_scalar(key, value, step)
+
+    def _try_wandb_log(self, key, value, step):
+        if self._wandb is not None:
+            self._wandb.log({key: value}, step=step)
 
     def log(self, key, value, step):
         assert key.startswith('train') or key.startswith('eval')
         if type(value) == torch.Tensor:
             value = value.item()
         self._try_sw_log(key, value, step)
+        self._try_wandb_log(key, value, step)
         mg = self._train_mg if key.startswith('train') else self._eval_mg
         mg.log(key, value)
 

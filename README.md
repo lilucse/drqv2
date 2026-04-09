@@ -2,7 +2,9 @@
 
 # DrQ-v2: Improved Data-Augmented RL Agent
 
-This is an original PyTorch implementation of DrQ-v2 from
+This is a modified version of the [original DrQ-v2 repository](https://github.com/facebookresearch/drqv2). The only changes are a simplified environment setup (no manual MuJoCo installation required) and the addition of wandb logging. The algorithm and training code are unchanged.
+
+Based on the original PyTorch implementation of DrQ-v2 from
 
 [[Mastering Visual Continuous Control: Improved Data-Augmented Reinforcement Learning]](https://arxiv.org/abs/2107.09645) by
 
@@ -62,7 +64,30 @@ Please also cite our original paper:
 }
 ```
 
-## Instructions
+## Quick Setup
+
+No MuJoCo license or binary install needed — modern `dm_control` bundles `mujoco` directly.
+
+```sh
+conda create -n drqv2 python=3.10 -y
+conda activate drqv2
+pip install -r requirements.txt
+```
+
+Train the agent:
+```sh
+python train.py task@_global_=quadruped_walk
+```
+
+Results are logged to wandb by default. Monitor with tensorboard:
+```sh
+tensorboard --logdir exp_local
+```
+
+## Original Instructions (deprecated)
+
+<details>
+<summary>Click to expand</summary>
 
 Install [MuJoCo](http://www.mujoco.org/) if it is not already the case:
 
@@ -93,6 +118,8 @@ Monitor results:
 ```sh
 tensorboard --logdir exp_local
 ```
+
+</details>
 
 ## License
 The majority of DrQ-v2 is licensed under the MIT license, however portions of the project are available under separate license terms: DeepMind is licensed under the Apache 2.0 license.

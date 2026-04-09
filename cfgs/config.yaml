@@ -1,6 +1,6 @@
 defaults:
-  - _self_
   - task@_global_: quadruped_walk
+  - _self_
   - override hydra/launcher: submitit_local
 
 # task settings
@@ -8,6 +8,7 @@ frame_stack: 3
 action_repeat: 2
 discount: 0.99
 # train settings
+num_train_frames: 1000000  # 500k global_step (= 1M env frames, action_repeat=2) — matches drqv2 paper Table 6
 num_seed_frames: 4000
 # eval
 eval_every_frames: 10000
@@ -25,6 +26,11 @@ device: cuda
 save_video: true
 save_train_video: false
 use_tb: true
+# wandb
+use_wandb: true
+wandb_project: drqv2
+wandb_entity: null
+wandb_group: null
 # experiment
 experiment: exp
 # agent
