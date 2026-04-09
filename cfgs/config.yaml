@@ -8,7 +8,7 @@ frame_stack: 3
 action_repeat: 2
 discount: 0.99
 # train settings
-num_train_frames: 1000000  # 500k global_step (= 1M env frames, action_repeat=2) — matches drqv2 paper Table 6
+num_train_frames: 1000000
 num_seed_frames: 4000
 # eval
 eval_every_frames: 10000
